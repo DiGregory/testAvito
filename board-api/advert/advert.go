@@ -8,6 +8,7 @@ import (
 	"github.com/lib/pq"
 	"errors"
 	"time"
+	"fmt"
 )
 
 var InvalidFieldErr = errors.New("invalid input field(s) length")
@@ -126,15 +127,10 @@ func (as AdStorage) GetAdverts(offset int, sortBy, orderBy string) ([]*Advert, e
 	if orderBy != "desc" {
 		orderBy = "asc"
 	}
+	queryString := fmt.Sprintf("SELECT adverts.name,adverts.images[1],adverts.price"+
+		" FROM adverts ORDER BY %s %s LIMIT 10 OFFSET $1;", sortByField, orderBy)
 
-	switch orderBy {
-	case "desc":
-		adsRecords, err = as.DB.Query("SELECT adverts.name,adverts.images[1],adverts.price"+
-			" FROM adverts ORDER BY $1 DESC LIMIT 10 OFFSET $2;", sortByField, offset)
-	default:
-		adsRecords, err = as.DB.Query("SELECT adverts.name,adverts.images[1],adverts.price"+
-			" FROM adverts ORDER BY $1 ASC LIMIT 10 OFFSET $2;", sortByField, offset)
-	}
+	adsRecords, err = as.DB.Query(queryString, offset)
 
 	if err != nil {
 		return nil, err
